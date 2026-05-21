@@ -23,7 +23,7 @@
 
     .app {
       width: 100%;
-      max-width: 750px;
+      max-width: 850px;
       background: #ffffff;
       border-radius: 16px;
       padding: 25px;
@@ -37,13 +37,13 @@
     }
 
     .form {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 230px auto;
       gap: 10px;
       margin-bottom: 20px;
     }
 
     .form input {
-      flex: 1;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -105,6 +105,37 @@
       text-align: center;
     }
 
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .legend-item {
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    .legend-safe {
+      background: #e9f8ee;
+    }
+
+    .legend-warning {
+      background: #fff7d6;
+    }
+
+    .legend-urgent {
+      background: #ffe5d0;
+    }
+
+    .legend-overdue {
+      background: #ffd6d6;
+    }
+
     .task-list {
       list-style: none;
       display: flex;
@@ -113,14 +144,38 @@
     }
 
     .task {
-      background: #f8f9fc;
-      border: 1px solid #e0e3ea;
       border-radius: 12px;
       padding: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
+      border: 2px solid transparent;
+    }
+
+    .task.safe {
+      background: #e9f8ee;
+      border-color: #95d5a6;
+    }
+
+    .task.warning {
+      background: #fff7d6;
+      border-color: #f0d36b;
+    }
+
+    .task.urgent {
+      background: #ffe5d0;
+      border-color: #ffad66;
+    }
+
+    .task.overdue {
+      background: #ffd6d6;
+      border-color: #e05252;
+    }
+
+    .task.completed {
+      background: #eef1f5;
+      border-color: #c6ccd6;
     }
 
     .task-info {
@@ -134,9 +189,16 @@
       word-break: break-word;
     }
 
-    .task-date {
+    .task-date,
+    .task-deadline,
+    .task-status {
       font-size: 12px;
-      color: #777;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    .task-status strong {
+      color: #222;
     }
 
     .task-actions {
@@ -184,9 +246,13 @@
       display: block;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 750px) {
       .form {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+      }
+
+      .legend {
+        grid-template-columns: 1fr 1fr;
       }
 
       .task {
@@ -202,6 +268,12 @@
         flex-direction: column;
       }
     }
+
+    @media (max-width: 450px) {
+      .legend {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -210,6 +282,7 @@
 
     <form class="form" id="taskForm">
       <input type="text" id="taskInput" placeholder="Введіть нове завдання..." />
+      <input type="datetime-local" id="deadlineInput" />
       <button type="submit">Додати</button>
     </form>
 
@@ -224,6 +297,13 @@
       <div class="stat-box">Виконані: <span id="completedCount">0</span></div>
     </div>
 
+    <div class="legend">
+      <div class="legend-item legend-safe">Зелений: більше 3 днів</div>
+      <div class="legend-item legend-warning">Жовтий: менше 3 днів</div>
+      <div class="legend-item legend-urgent">Помаранчевий: менше 24 годин</div>
+      <div class="legend-item legend-overdue">Червоний: прострочено</div>
+    </div>
+
     <ul class="task-list" id="taskList"></ul>
 
     <button class="clear-history" id="clearHistoryBtn" type="button">Очистити історію</button>
@@ -232,6 +312,7 @@
   <script>
     const taskForm = document.getElementById("taskForm");
     const taskInput = document.getElementById("taskInput");
+    const deadlineInput = document.getElementById("deadlineInput");
     const taskList = document.getElementById("taskList");
     const activeTab = document.getElementById("activeTab");
     const historyTab = document.getElementById("historyTab");
@@ -249,6 +330,8 @@
     }
 
     function formatDate(date) {
+      if (!date) return "не вказано";
+
       return new Date(date).toLocaleDateString("uk-UA", {
         day: "2-digit",
         month: "2-digit",
@@ -256,6 +339,50 @@
         hour: "2-digit",
         minute: "2-digit"
       });
+    }
+
+    function getDeadlineInfo(deadline) {
+      if (!deadline) {
+        return {
+          className: "safe",
+          text: "Дедлайн не встановлено"
+        };
+      }
+
+      const now = new Date();
+      const deadlineDate = new Date(deadline);
+      const difference = deadlineDate - now;
+      const oneDay = 24 * 60 * 60 * 1000;
+      const threeDays = 3 * oneDay;
+
+      if (difference < 0) {
+        return {
+          className: "overdue",
+          text: "Термін виконання минув"
+        };
+      }
+
+      if (difference <= oneDay) {
+        const hours = Math.ceil(difference / (60 * 60 * 1000));
+        return {
+          className: "urgent",
+          text: `Залишилось менше 24 годин (${hours} год.)`
+        };
+      }
+
+      if (difference <= threeDays) {
+        const days = Math.ceil(difference / oneDay);
+        return {
+          className: "warning",
+          text: `Залишилось менше 3 днів (${days} дн.)`
+        };
+      }
+
+      const days = Math.ceil(difference / oneDay);
+      return {
+        className: "safe",
+        text: `Часу достатньо (${days} дн.)`
+      };
     }
 
     function updateStats() {
@@ -287,8 +414,12 @@
       }
 
       filteredTasks.forEach(task => {
+        const deadlineInfo = getDeadlineInfo(task.deadline);
+
         const li = document.createElement("li");
-        li.className = "task";
+        li.className = task.completed
+          ? "task completed"
+          : `task ${deadlineInfo.className}`;
 
         const taskInfo = document.createElement("div");
         taskInfo.className = "task-info";
@@ -306,8 +437,18 @@
           date.textContent = `Створено: ${formatDate(task.createdAt)}`;
         }
 
+        const deadline = document.createElement("div");
+        deadline.className = "task-deadline";
+        deadline.textContent = `Дедлайн: ${formatDate(task.deadline)}`;
+
+        const status = document.createElement("div");
+        status.className = "task-status";
+        status.innerHTML = `<strong>Стан:</strong> ${task.completed ? "Завдання виконано" : deadlineInfo.text}`;
+
         taskInfo.appendChild(title);
         taskInfo.appendChild(date);
+        taskInfo.appendChild(deadline);
+        taskInfo.appendChild(status);
 
         const actions = document.createElement("div");
         actions.className = "task-actions";
@@ -351,12 +492,13 @@
       updateStats();
     }
 
-    function addTask(text) {
+    function addTask(text, deadline) {
       const newTask = {
         id: Date.now(),
         text: text,
         completed: false,
         createdAt: new Date().toISOString(),
+        deadline: deadline || null,
         completedAt: null
       };
 
@@ -403,6 +545,17 @@
 
       if (newText !== null && newText.trim() !== "") {
         task.text = newText.trim();
+
+        const newDeadline = prompt(
+          "Введіть новий дедлайн у форматі РРРР-ММ-ДД ГГ:ХХ або залиште порожнім:",
+          task.deadline ? task.deadline.slice(0, 16).replace("T", " ") : ""
+        );
+
+        if (newDeadline !== null) {
+          const normalizedDeadline = newDeadline.trim().replace(" ", "T");
+          task.deadline = normalizedDeadline === "" ? null : normalizedDeadline;
+        }
+
         saveTasks();
         renderTasks();
       }
@@ -432,14 +585,16 @@
       event.preventDefault();
 
       const text = taskInput.value.trim();
+      const deadline = deadlineInput.value;
 
       if (text === "") {
         alert("Будь ласка, введіть текст завдання");
         return;
       }
 
-      addTask(text);
+      addTask(text, deadline);
       taskInput.value = "";
+      deadlineInput.value = "";
       taskInput.focus();
     });
 
@@ -460,6 +615,8 @@
     clearHistoryBtn.addEventListener("click", clearHistory);
 
     renderTasks();
+
+    setInterval(renderTasks, 60000);
   </script>
 </body>
 </html>
