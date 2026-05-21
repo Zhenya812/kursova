@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Список справ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #f2f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 15px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 750px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #222;
+    }
+
+    .form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .form input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .form button,
+    .task button,
+    .tabs button,
+    .clear-history {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .form button {
+      background: #2d6cdf;
+      color: white;
+    }
+
+    .form button:hover {
+      background: #1f55b5;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tabs button {
+      flex: 1;
+      background: #e8ecf3;
+      color: #222;
+    }
+
+    .tabs button.active {
+      background: #2d6cdf;
+      color: #fff;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #f5f7fb;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task {
+      background: #f8f9fc;
+      border: 1px solid #e0e3ea;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 16px;
+      color: #222;
+      margin-bottom: 5px;
+      word-break: break-word;
+    }
+
+    .task-date {
+      font-size: 12px;
+      color: #777;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .complete-btn {
+      background: #28a745;
+      color: #fff;
+    }
+
+    .edit-btn {
+      background: #ffc107;
+      color: #222;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: #fff;
+    }
+
+    .restore-btn {
+      background: #17a2b8;
+      color: #fff;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      padding: 25px 0;
+    }
+
+    .clear-history {
+      margin-top: 20px;
+      width: 100%;
+      background: #dc3545;
+      color: #fff;
+      display: none;
+    }
+
+    .clear-history.visible {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .form {
+        flex-direction: column;
+      }
+
+      .task {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .task-actions {
+        justify-content: flex-start;
+      }
+
+      .stats {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Список справ</h1>
+
+    <form class="form" id="taskForm">
+      <input type="text" id="taskInput" placeholder="Введіть нове завдання..." />
+      <button type="submit">Додати</button>
+    </form>
+
+    <div class="tabs">
+      <button class="active" id="activeTab" type="button">Активні завдання</button>
+      <button id="historyTab" type="button">Історія виконаних</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">Усього: <span id="totalCount">0</span></div>
+      <div class="stat-box">Активні: <span id="activeCount">0</span></div>
+      <div class="stat-box">Виконані: <span id="completedCount">0</span></div>
+    </div>
+
+    <ul class="task-list" id="taskList"></ul>
+
+    <button class="clear-history" id="clearHistoryBtn" type="button">Очистити історію</button>
+  </div>
+
+  <script>
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
+    const activeTab = document.getElementById("activeTab");
+    const historyTab = document.getElementById("historyTab");
+    const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+    const totalCount = document.getElementById("totalCount");
+    const activeCount = document.getElementById("activeCount");
+    const completedCount = document.getElementById("completedCount");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let currentTab = "active";
+
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString("uk-UA", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function updateStats() {
+      const activeTasks = tasks.filter(task => !task.completed);
+      const completedTasks = tasks.filter(task => task.completed);
+
+      totalCount.textContent = tasks.length;
+      activeCount.textContent = activeTasks.length;
+      completedCount.textContent = completedTasks.length;
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+
+      const filteredTasks = tasks.filter(task => {
+        if (currentTab === "active") {
+          return !task.completed;
+        }
+        return task.completed;
+      });
+
+      if (filteredTasks.length === 0) {
+        const emptyMessage = document.createElement("li");
+        emptyMessage.className = "empty";
+        emptyMessage.textContent = currentTab === "active"
+          ? "Активних завдань поки немає"
+          : "Історія виконаних завдань порожня";
+        taskList.appendChild(emptyMessage);
+      }
+
+      filteredTasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = "task";
+
+        const taskInfo = document.createElement("div");
+        taskInfo.className = "task-info";
+
+        const title = document.createElement("div");
+        title.className = "task-title";
+        title.textContent = task.text;
+
+        const date = document.createElement("div");
+        date.className = "task-date";
+
+        if (task.completed) {
+          date.textContent = `Створено: ${formatDate(task.createdAt)} | Виконано: ${formatDate(task.completedAt)}`;
+        } else {
+          date.textContent = `Створено: ${formatDate(task.createdAt)}`;
+        }
+
+        taskInfo.appendChild(title);
+        taskInfo.appendChild(date);
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        if (!task.completed) {
+          const completeBtn = document.createElement("button");
+          completeBtn.className = "complete-btn";
+          completeBtn.textContent = "Виконано";
+          completeBtn.onclick = () => completeTask(task.id);
+          actions.appendChild(completeBtn);
+
+          const editBtn = document.createElement("button");
+          editBtn.className = "edit-btn";
+          editBtn.textContent = "Редагувати";
+          editBtn.onclick = () => editTask(task.id);
+          actions.appendChild(editBtn);
+        } else {
+          const restoreBtn = document.createElement("button");
+          restoreBtn.className = "restore-btn";
+          restoreBtn.textContent = "Повернути";
+          restoreBtn.onclick = () => restoreTask(task.id);
+          actions.appendChild(restoreBtn);
+        }
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "Видалити";
+        deleteBtn.onclick = () => deleteTask(task.id);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(taskInfo);
+        li.appendChild(actions);
+        taskList.appendChild(li);
+      });
+
+      clearHistoryBtn.classList.toggle(
+        "visible",
+        currentTab === "history" && tasks.some(task => task.completed)
+      );
+
+      updateStats();
+    }
+
+    function addTask(text) {
+      const newTask = {
+        id: Date.now(),
+        text: text,
+        completed: false,
+        createdAt: new Date().toISOString(),
+        completedAt: null
+      };
+
+      tasks.push(newTask);
+      saveTasks();
+      renderTasks();
+    }
+
+    function completeTask(id) {
+      tasks = tasks.map(task => {
+        if (task.id === id) {
+          return {
+            ...task,
+            completed: true,
+            completedAt: new Date().toISOString()
+          };
+        }
+        return task;
+      });
+
+      saveTasks();
+      renderTasks();
+    }
+
+    function restoreTask(id) {
+      tasks = tasks.map(task => {
+        if (task.id === id) {
+          return {
+            ...task,
+            completed: false,
+            completedAt: null
+          };
+        }
+        return task;
+      });
+
+      saveTasks();
+      renderTasks();
+    }
+
+    function editTask(id) {
+      const task = tasks.find(task => task.id === id);
+      const newText = prompt("Введіть новий текст завдання:", task.text);
+
+      if (newText !== null && newText.trim() !== "") {
+        task.text = newText.trim();
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    function deleteTask(id) {
+      const confirmDelete = confirm("Ви точно хочете видалити це завдання?");
+
+      if (confirmDelete) {
+        tasks = tasks.filter(task => task.id !== id);
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    function clearHistory() {
+      const confirmClear = confirm("Ви точно хочете очистити всю історію виконаних завдань?");
+
+      if (confirmClear) {
+        tasks = tasks.filter(task => !task.completed);
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    taskForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const text = taskInput.value.trim();
+
+      if (text === "") {
+        alert("Будь ласка, введіть текст завдання");
+        return;
+      }
+
+      addTask(text);
+      taskInput.value = "";
+      taskInput.focus();
+    });
+
+    activeTab.addEventListener("click", function() {
+      currentTab = "active";
+      activeTab.classList.add("active");
+      historyTab.classList.remove("active");
+      renderTasks();
+    });
+
+    historyTab.addEventListener("click", function() {
+      currentTab = "history";
+      historyTab.classList.add("active");
+      activeTab.classList.remove("active");
+      renderTasks();
+    });
+
+    clearHistoryBtn.addEventListener("click", clearHistory);
+
+    renderTasks();
+  </script>
+</body>
+</html>
