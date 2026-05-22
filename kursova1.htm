@@ -120,9 +120,70 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       font-size: 13px;
     }
+
+    .filter-panel {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .filter-open-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #2d6cdf;
+      color: #fff;
+      transition: 0.2s;
+    }
+
+    .filter-open-btn:hover {
+      background: #1f55b5;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-field label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .filter-field select {
+      width: 100%;
+      border: 1px solid #cfd6e4;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .filter-field select:focus {
+      border-color: #2d6cdf;
+      box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
+    }
+
+    .reset-filter-btn {
+      background: #6c757d;
+      color: #fff;
+    }
+
 
     .legend-item {
       padding: 10px;
@@ -451,6 +512,10 @@
       .stats {
         flex-direction: column;
       }
+
+      .filters {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -495,6 +560,43 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="filterModal">
+    <div class="modal">
+      <h2>Фільтр завдань</h2>
+      <p class="modal-subtitle">Оберіть, які завдання потрібно показати</p>
+
+      <div class="filters">
+        <div class="filter-field">
+          <label for="priorityFilter">Фільтр за важливістю</label>
+          <select id="priorityFilter">
+            <option value="all">Усі завдання</option>
+            <option value="Дуже важлива">Дуже важлива</option>
+            <option value="Важлива">Важлива</option>
+            <option value="Звичайна">Звичайна</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="deadlineFilter">Фільтр за терміном</label>
+          <select id="deadlineFilter">
+            <option value="all">Усі терміни</option>
+            <option value="overdue">Прострочені</option>
+            <option value="one-day">1 день або менше</option>
+            <option value="one-week">Тиждень або менше</option>
+            <option value="two-weeks">Менше 2 тижнів</option>
+            <option value="more-than-two-weeks">Більше 2 тижнів</option>
+            <option value="no-deadline">Без дедлайну</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="reset-filter-btn" id="resetFilterBtn">Скинути</button>
+        <button type="button" class="save-task-btn" id="applyFilterBtn">Застосувати</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="detailsModal">
     <div class="modal">
       <h2 id="detailsTitle">Інформація про завдання</h2>
@@ -533,6 +635,11 @@
       <div class="legend-item legend-overdue">Червоний: залишився день або прострочено</div>
     </div>
 
+
+    <div class="filter-panel">
+      <button class="filter-open-btn" id="openFilterBtn" type="button">Фільтр</button>
+    </div>
+
     <ul class="task-list" id="taskList"></ul>
 
     <button class="clear-history" id="clearHistoryBtn" type="button">Очистити історію</button>
@@ -541,6 +648,7 @@
   <script>
     const taskModal = document.getElementById("taskModal");
     const detailsModal = document.getElementById("detailsModal");
+    const filterModal = document.getElementById("filterModal");
     const detailsTitle = document.getElementById("detailsTitle");
     const detailsContent = document.getElementById("detailsContent");
     const closeDetailsBtn = document.getElementById("closeDetailsBtn");
@@ -558,6 +666,11 @@
     const activeTab = document.getElementById("activeTab");
     const historyTab = document.getElementById("historyTab");
     const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+    const openFilterBtn = document.getElementById("openFilterBtn");
+    const priorityFilter = document.getElementById("priorityFilter");
+    const deadlineFilter = document.getElementById("deadlineFilter");
+    const applyFilterBtn = document.getElementById("applyFilterBtn");
+    const resetFilterBtn = document.getElementById("resetFilterBtn");
 
     const totalCount = document.getElementById("totalCount");
     const activeCount = document.getElementById("activeCount");
@@ -713,6 +826,45 @@
       }
     }
 
+    function getPriorityWeight(priority) {
+      if (priority === "Дуже важлива") return 3;
+      if (priority === "Важлива") return 2;
+      return 1;
+    }
+
+    function getDeadlineTime(deadline) {
+      if (!deadline) return Number.MAX_SAFE_INTEGER;
+      return new Date(deadline).getTime();
+    }
+
+    function sortTasksByPriorityAndDeadline(taskArray) {
+      return [...taskArray].sort(function(a, b) {
+        const priorityDifference = getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+
+        if (priorityDifference !== 0) {
+          return priorityDifference;
+        }
+
+        return getDeadlineTime(a.deadline) - getDeadlineTime(b.deadline);
+      });
+    }
+
+    function taskMatchesFilters(task) {
+      const selectedPriority = priorityFilter.value;
+      const selectedDeadline = deadlineFilter.value;
+      const deadlineLevel = getDeadlineInfo(task.deadline).level;
+
+      if (selectedPriority !== "all" && (task.priority || "Звичайна") !== selectedPriority) {
+        return false;
+      }
+
+      if (selectedDeadline !== "all" && deadlineLevel !== selectedDeadline) {
+        return false;
+      }
+
+      return true;
+    }
+
     function updateStats() {
       const activeTasks = tasks.filter(function(task) {
         return !task.completed;
@@ -730,19 +882,19 @@
     function renderTasks() {
       taskList.innerHTML = "";
 
-      const filteredTasks = tasks.filter(function(task) {
-        if (currentTab === "active") {
-          return !task.completed;
-        }
-        return task.completed;
-      });
+      const filteredTasks = sortTasksByPriorityAndDeadline(
+        tasks.filter(function(task) {
+          const tabMatches = currentTab === "active" ? !task.completed : task.completed;
+          return tabMatches && taskMatchesFilters(task);
+        })
+      );
 
       if (filteredTasks.length === 0) {
         const emptyMessage = document.createElement("li");
         emptyMessage.className = "empty";
         emptyMessage.textContent = currentTab === "active"
-          ? "Активних завдань поки немає"
-          : "Історія виконаних завдань порожня";
+          ? "Активних завдань за цим фільтром немає"
+          : "В історії немає завдань за цим фільтром";
         taskList.appendChild(emptyMessage);
       }
 
@@ -1054,6 +1206,12 @@
       }
     });
 
+    filterModal.addEventListener("click", function(event) {
+      if (event.target === filterModal) {
+        filterModal.classList.remove("visible");
+      }
+    });
+
     closeDetailsBtn.onclick = function() {
       closeDetailsModal();
     };
@@ -1081,6 +1239,22 @@
 
     clearHistoryBtn.onclick = function() {
       clearHistory();
+    };
+
+    openFilterBtn.onclick = function() {
+      filterModal.classList.add("visible");
+    };
+
+    applyFilterBtn.onclick = function() {
+      filterModal.classList.remove("visible");
+      renderTasks();
+    };
+
+    resetFilterBtn.onclick = function() {
+      priorityFilter.value = "all";
+      deadlineFilter.value = "all";
+      filterModal.classList.remove("visible");
+      renderTasks();
     };
 
     checkDeadlineNotifications();
