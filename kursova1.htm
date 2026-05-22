@@ -36,21 +36,25 @@
       color: #222;
     }
 
-    .form {
-      display: grid;
-      grid-template-columns: 1fr 230px auto;
-      gap: 10px;
+    .top-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 20px;
+      background: #f5f7fb;
+      border: 1px solid #dfe5f0;
+      border-radius: 12px;
+      padding: 14px;
     }
 
-    .form input {
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
+    .top-panel-text {
+      color: #444;
+      font-size: 14px;
     }
 
-    .form button,
+    .open-modal-btn,
+    .modal-actions button,
     .task button,
     .tabs button,
     .clear-history {
@@ -62,13 +66,20 @@
       transition: 0.2s;
     }
 
-    .form button {
+    .open-modal-btn,
+    .save-task-btn {
       background: #2d6cdf;
       color: white;
     }
 
-    .form button:hover {
+    .open-modal-btn:hover,
+    .save-task-btn:hover {
       background: #1f55b5;
+    }
+
+    .cancel-modal-btn {
+      background: #6c757d;
+      color: white;
     }
 
     .tabs {
@@ -182,13 +193,16 @@
 
     .task-date,
     .task-deadline,
-    .task-status {
+    .task-status,
+    .task-description,
+    .task-priority {
       font-size: 12px;
       color: #555;
       margin-top: 3px;
     }
 
-    .task-status strong {
+    .task-status strong,
+    .task-priority strong {
       color: #222;
     }
 
@@ -264,6 +278,87 @@
       margin-bottom: 4px;
     }
 
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      z-index: 900;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 460px;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      animation: modalShow 0.25s ease;
+    }
+
+    .modal h2 {
+      font-size: 22px;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .modal-subtitle {
+      font-size: 13px;
+      color: #667085;
+      margin-bottom: 18px;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .modal-field label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .modal-field input,
+    .modal-field select,
+    .modal-field textarea {
+      width: 100%;
+      border: 1px solid #cfd6e4;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      resize: vertical;
+    }
+
+    .modal-field input:focus,
+    .modal-field select:focus,
+    .modal-field textarea:focus {
+      border-color: #2d6cdf;
+      box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
     @keyframes slideIn {
       from {
         transform: translateX(120%);
@@ -275,9 +370,21 @@
       }
     }
 
+    @keyframes modalShow {
+      from {
+        transform: translateY(20px) scale(0.96);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
     @media (max-width: 750px) {
-      .form {
-        grid-template-columns: 1fr;
+      .top-panel {
+        flex-direction: column;
+        align-items: stretch;
       }
 
       .legend {
@@ -302,14 +409,51 @@
 <body>
   <div class="toast-container" id="toastContainer"></div>
 
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal">
+      <h2 id="modalTitle">Нове завдання</h2>
+      <p class="modal-subtitle">Налаштуйте завдання перед додаванням у список</p>
+
+      <form class="modal-form" id="taskForm">
+        <div class="modal-field">
+          <label for="taskInput">Назва завдання</label>
+          <input type="text" id="taskInput" placeholder="Наприклад: зробити лабораторну" />
+        </div>
+
+        <div class="modal-field">
+          <label for="deadlineInput">Введіть час дедлайну</label>
+          <input type="datetime-local" id="deadlineInput" />
+        </div>
+
+        <div class="modal-field">
+          <label for="priorityInput">Важливість</label>
+          <select id="priorityInput">
+            <option value="Звичайна">Звичайна</option>
+            <option value="Важлива">Важлива</option>
+            <option value="Дуже важлива">Дуже важлива</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label for="descriptionInput">Опис або примітка</label>
+          <textarea id="descriptionInput" rows="3" placeholder="Можна залишити порожнім"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-modal-btn" id="cancelEditBtn">Скасувати</button>
+          <button type="submit" class="save-task-btn" id="submitBtn">Додати</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="app">
     <h1>Список справ</h1>
 
-    <form class="form" id="taskForm">
-      <input type="text" id="taskInput" placeholder="Введіть нове завдання..." />
-      <input type="datetime-local" id="deadlineInput" />
-      <button type="submit">Додати</button>
-    </form>
+    <div class="top-panel">
+      <div class="top-panel-text">Створюйте завдання, задавайте дедлайни та відстежуйте терміни виконання:</div>
+      <button class="open-modal-btn" id="openCreateModalBtn" type="button">Створити завдання</button>
+    </div>
 
     <div class="tabs">
       <button class="active" id="activeTab" type="button">Активні завдання</button>
@@ -334,9 +478,16 @@
   </div>
 
   <script>
+    const taskModal = document.getElementById("taskModal");
+    const openCreateModalBtn = document.getElementById("openCreateModalBtn");
+    const modalTitle = document.getElementById("modalTitle");
     const taskForm = document.getElementById("taskForm");
     const taskInput = document.getElementById("taskInput");
     const deadlineInput = document.getElementById("deadlineInput");
+    const priorityInput = document.getElementById("priorityInput");
+    const descriptionInput = document.getElementById("descriptionInput");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
     const taskList = document.getElementById("taskList");
     const toastContainer = document.getElementById("toastContainer");
     const activeTab = document.getElementById("activeTab");
@@ -349,6 +500,7 @@
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     let currentTab = "active";
+    let editingTaskId = null;
 
     function saveTasks() {
       localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -459,9 +611,11 @@
         const deadlineInfo = getDeadlineInfo(task.deadline);
 
         if (task.lastDeadlineLevel === undefined) {
-          task.lastDeadlineLevel = deadlineInfo.level;
           changed = true;
-          return task;
+          return {
+            ...task,
+            lastDeadlineLevel: deadlineInfo.level
+          };
         }
 
         if (task.lastDeadlineLevel !== deadlineInfo.level) {
@@ -471,6 +625,7 @@
             showToast(task.text, message);
           }
 
+          changed = true;
           return {
             ...task,
             lastDeadlineLevel: deadlineInfo.level
@@ -544,6 +699,14 @@
         deadline.className = "task-deadline";
         deadline.textContent = "Дедлайн: " + formatDate(task.deadline);
 
+        const priority = document.createElement("div");
+        priority.className = "task-priority";
+        priority.innerHTML = "<strong>Важливість:</strong> " + (task.priority || "Звичайна");
+
+        const description = document.createElement("div");
+        description.className = "task-description";
+        description.textContent = task.description ? "Опис: " + task.description : "";
+
         const status = document.createElement("div");
         status.className = "task-status";
         status.innerHTML = "<strong>Стан:</strong> " + (task.completed ? "Завдання виконано" : deadlineInfo.text);
@@ -551,6 +714,8 @@
         taskInfo.appendChild(title);
         taskInfo.appendChild(date);
         taskInfo.appendChild(deadline);
+        taskInfo.appendChild(priority);
+        if (task.description) taskInfo.appendChild(description);
         taskInfo.appendChild(status);
 
         const actions = document.createElement("div");
@@ -560,34 +725,34 @@
           const completeBtn = document.createElement("button");
           completeBtn.className = "complete-btn";
           completeBtn.textContent = "Виконано";
-          completeBtn.addEventListener("click", function() {
+          completeBtn.onclick = function() {
             completeTask(task.id);
-          });
+          };
           actions.appendChild(completeBtn);
 
           const editBtn = document.createElement("button");
           editBtn.className = "edit-btn";
           editBtn.textContent = "Редагувати";
-          editBtn.addEventListener("click", function() {
-            editTask(task.id);
-          });
+          editBtn.onclick = function() {
+            startEditTask(task.id);
+          };
           actions.appendChild(editBtn);
         } else {
           const restoreBtn = document.createElement("button");
           restoreBtn.className = "restore-btn";
           restoreBtn.textContent = "Повернути";
-          restoreBtn.addEventListener("click", function() {
+          restoreBtn.onclick = function() {
             restoreTask(task.id);
-          });
+          };
           actions.appendChild(restoreBtn);
         }
 
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Видалити";
-        deleteBtn.addEventListener("click", function() {
+        deleteBtn.onclick = function() {
           deleteTask(task.id);
-        });
+        };
         actions.appendChild(deleteBtn);
 
         li.appendChild(taskInfo);
@@ -605,13 +770,39 @@
       updateStats();
     }
 
-    function addTask(text, deadline) {
+    function openModal(mode) {
+      taskModal.classList.add("visible");
+      modalTitle.textContent = mode === "edit" ? "Редагування завдання" : "Нове завдання";
+      submitBtn.textContent = mode === "edit" ? "Зберегти" : "Додати";
+      setTimeout(function() {
+        taskInput.focus();
+      }, 100);
+    }
+
+    function closeModal() {
+      taskModal.classList.remove("visible");
+      resetForm();
+    }
+
+    function resetForm() {
+      editingTaskId = null;
+      taskInput.value = "";
+      deadlineInput.value = "";
+      priorityInput.value = "Звичайна";
+      descriptionInput.value = "";
+      modalTitle.textContent = "Нове завдання";
+      submitBtn.textContent = "Додати";
+    }
+
+    function addTask(text, deadline, priority, description) {
       const newTask = {
         id: Date.now(),
         text: text,
         completed: false,
         createdAt: new Date().toISOString(),
         deadline: deadline || null,
+        priority: priority || "Звичайна",
+        description: description || "",
         lastDeadlineLevel: deadline ? getDeadlineInfo(deadline).level : "no-deadline",
         completedAt: null
       };
@@ -619,6 +810,27 @@
       tasks.push(newTask);
       saveTasks();
       renderTasks();
+      showToast("Завдання створено", text);
+    }
+
+    function updateTask(id, text, deadline, priority, description) {
+      tasks = tasks.map(function(task) {
+        if (task.id === id) {
+          return {
+            ...task,
+            text: text,
+            deadline: deadline || null,
+            priority: priority || "Звичайна",
+            description: description || "",
+            lastDeadlineLevel: deadline ? getDeadlineInfo(deadline).level : "no-deadline"
+          };
+        }
+        return task;
+      });
+
+      saveTasks();
+      renderTasks();
+      showToast("Завдання оновлено", text);
     }
 
     function completeTask(id) {
@@ -654,80 +866,87 @@
       renderTasks();
     }
 
-    function editTask(id) {
-      const task = tasks.find(function(task) {
-        return task.id === id;
+    function startEditTask(id) {
+      const task = tasks.find(function(item) {
+        return item.id === id;
       });
 
-      const newText = prompt("Введіть новий текст завдання:", task.text);
+      if (!task) return;
 
-      if (newText === null || newText.trim() === "") {
-        return;
-      }
+      editingTaskId = id;
+      taskInput.value = task.text;
+      deadlineInput.value = task.deadline ? task.deadline.slice(0, 16) : "";
+      priorityInput.value = task.priority || "Звичайна";
+      descriptionInput.value = task.description || "";
+      openModal("edit");
+    }
 
-      const currentDeadline = task.deadline ? task.deadline.slice(0, 16).replace("T", " ") : "";
-      const newDeadline = prompt(
-        "Введіть новий дедлайн у форматі РРРР-ММ-ДД ГГ:ХХ або залиште порожнім:",
-        currentDeadline
-      );
-
-      task.text = newText.trim();
-
-      if (newDeadline !== null) {
-        const normalizedDeadline = newDeadline.trim().replace(" ", "T");
-        task.deadline = normalizedDeadline === "" ? null : normalizedDeadline;
-        task.lastDeadlineLevel = task.deadline ? getDeadlineInfo(task.deadline).level : "no-deadline";
-      }
+    function deleteTask(id) {
+      tasks = tasks.filter(function(task) {
+        return task.id !== id;
+      });
 
       saveTasks();
       renderTasks();
     }
 
-    function deleteTask(id) {
-      const confirmDelete = confirm("Ви точно хочете видалити це завдання?");
-
-      if (confirmDelete) {
-        tasks = tasks.filter(function(task) {
-          return task.id !== id;
-        });
-        saveTasks();
-        renderTasks();
-      }
-    }
-
     function clearHistory() {
-      const confirmClear = confirm("Ви точно хочете очистити всю історію виконаних завдань?");
+      tasks = tasks.filter(function(task) {
+        return !task.completed;
+      });
 
-      if (confirmClear) {
-        tasks = tasks.filter(function(task) {
-          return !task.completed;
-        });
-        saveTasks();
-        renderTasks();
-      }
+      saveTasks();
+      renderTasks();
     }
+
+    openCreateModalBtn.onclick = function() {
+      resetForm();
+      openModal("create");
+    };
 
     taskForm.addEventListener("submit", function(event) {
       event.preventDefault();
 
       const text = taskInput.value.trim();
       const deadline = deadlineInput.value;
+      const priority = priorityInput.value;
+      const description = descriptionInput.value.trim();
 
       if (text === "") {
-        alert("Будь ласка, введіть текст завдання");
+        alert("Будь ласка, введіть текст завдання:");
         return;
       }
 
-      addTask(text, deadline);
-      taskInput.value = "";
-      deadlineInput.value = "";
-      taskInput.focus();
+      if (editingTaskId === null) {
+        addTask(text, deadline, priority, description);
+      } else {
+        updateTask(editingTaskId, text, deadline, priority, description);
+      }
+
+      closeModal();
+    });
+
+    cancelEditBtn.onclick = function() {
+      closeModal();
+    };
+
+    taskModal.addEventListener("click", function(event) {
+      if (event.target === taskModal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Escape" && taskModal.classList.contains("visible")) {
+        closeModal();
+      }
     });
 
     activeTab.addEventListener("click", function() {
       currentTab = "active";
       activeTab.classList.add("active");
       historyTab.classList.remove("active");
+      clearHistoryBtn.classList.remove("visible");
       renderTasks();
     });
 
@@ -738,7 +957,9 @@
       renderTasks();
     });
 
-    clearHistoryBtn.addEventListener("click", clearHistory);
+    clearHistoryBtn.onclick = function() {
+      clearHistory();
+    };
 
     checkDeadlineNotifications();
     renderTasks();
