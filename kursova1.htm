@@ -12,28 +12,152 @@
       font-family: Arial, sans-serif;
     }
 
+    :root {
+      --page-bg: #f2f4f8;
+      --app-bg: #ffffff;
+      --panel-bg: #f5f7fb;
+      --soft-bg: #e8ecf3;
+      --text-main: #222;
+      --text-muted: #444;
+      --text-light: #667085;
+      --border-color: #dfe5f0;
+      --input-border: #cfd6e4;
+      --primary: #2d6cdf;
+      --primary-hover: #1f55b5;
+      --shadow-main: rgba(0, 0, 0, 0.1);
+      --modal-shadow: rgba(0, 0, 0, 0.25);
+    }
+
     body {
       min-height: 100vh;
-      background: #f2f4f8;
+      background: var(--page-bg);
       display: flex;
       justify-content: center;
       align-items: flex-start;
       padding: 40px 15px;
+      color: var(--text-main);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.theme-dark {
+      --page-bg: #111827;
+      --app-bg: #1f2937;
+      --panel-bg: #273449;
+      --soft-bg: #374151;
+      --text-main: #f9fafb;
+      --text-muted: #d1d5db;
+      --text-light: #9ca3af;
+      --border-color: #4b5563;
+      --input-border: #6b7280;
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
+      --shadow-main: rgba(0, 0, 0, 0.35);
+      --modal-shadow: rgba(0, 0, 0, 0.55);
+    }
+
+    body.theme-gradient-berries {
+      --page-bg: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --app-bg: rgba(255, 255, 255, 0.92);
+      --panel-bg: rgba(245, 247, 251, 0.9);
+      --soft-bg: rgba(232, 236, 243, 0.9);
+      --text-main: #1f2937;
+      --text-muted: #374151;
+      --text-light: #667085;
+      --border-color: rgba(223, 229, 240, 0.9);
+      --input-border: #cfd6e4;
+      --primary: #7c3aed;
+      --primary-hover: #5b21b6;
+      --shadow-main: rgba(31, 41, 55, 0.22);
+      --modal-shadow: rgba(31, 41, 55, 0.35);
+    }
+
+    body.theme-gradient-sunset {
+      --page-bg: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 45%, #fad0c4 100%);
+      --app-bg: rgba(255, 255, 255, 0.93);
+      --panel-bg: rgba(255, 245, 242, 0.92);
+      --soft-bg: rgba(255, 230, 224, 0.9);
+      --text-main: #2d1b1b;
+      --text-muted: #4b2c2c;
+      --text-light: #795454;
+      --border-color: rgba(255, 197, 188, 0.95);
+      --input-border: #e7b7b0;
+      --primary: #e11d48;
+      --primary-hover: #be123c;
+      --shadow-main: rgba(80, 20, 30, 0.2);
+      --modal-shadow: rgba(80, 20, 30, 0.35);
+    }
+
+    body.theme-gradient-ocean {
+      --page-bg: linear-gradient(135deg, #00c6ff 0%, #0072ff 50%, #6a11cb 100%);
+      --app-bg: rgba(255, 255, 255, 0.92);
+      --panel-bg: rgba(235, 247, 255, 0.9);
+      --soft-bg: rgba(219, 239, 255, 0.9);
+      --text-main: #102033;
+      --text-muted: #243b55;
+      --text-light: #55708f;
+      --border-color: rgba(186, 219, 245, 0.95);
+      --input-border: #9fc3e0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --shadow-main: rgba(12, 52, 95, 0.22);
+      --modal-shadow: rgba(12, 52, 95, 0.35);
+    }
+
+    body.theme-gradient-forest {
+      --page-bg: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --app-bg: rgba(255, 255, 255, 0.92);
+      --panel-bg: rgba(238, 255, 245, 0.9);
+      --soft-bg: rgba(220, 252, 231, 0.9);
+      --text-main: #123026;
+      --text-muted: #214438;
+      --text-light: #527565;
+      --border-color: rgba(172, 230, 197, 0.95);
+      --input-border: #92cfae;
+      --primary: #059669;
+      --primary-hover: #047857;
+      --shadow-main: rgba(18, 48, 38, 0.22);
+      --modal-shadow: rgba(18, 48, 38, 0.35);
     }
 
     .app {
       width: 100%;
       max-width: 850px;
-      background: #ffffff;
+      background: var(--app-bg);
       border-radius: 16px;
       padding: 25px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 30px var(--shadow-main);
     }
 
     h1 {
       text-align: center;
       margin-bottom: 20px;
-      color: #222;
+      color: var(--text-main);
+    }
+
+    .theme-panel {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .theme-panel select {
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 14px;
+      outline: none;
+      background: var(--app-bg);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .theme-panel select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
     }
 
     .top-panel {
@@ -42,14 +166,14 @@
       align-items: center;
       gap: 12px;
       margin-bottom: 20px;
-      background: #f5f7fb;
-      border: 1px solid #dfe5f0;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 14px;
     }
 
     .top-panel-text {
-      color: #444;
+      color: var(--text-muted);
       font-size: 14px;
     }
 
@@ -68,13 +192,13 @@
 
     .open-modal-btn,
     .save-task-btn {
-      background: #2d6cdf;
+      background: var(--primary);
       color: white;
     }
 
     .open-modal-btn:hover,
     .save-task-btn:hover {
-      background: #1f55b5;
+      background: var(--primary-hover);
     }
 
     .cancel-modal-btn {
@@ -90,12 +214,12 @@
 
     .tabs button {
       flex: 1;
-      background: #e8ecf3;
-      color: #222;
+      background: var(--soft-bg);
+      color: var(--text-main);
     }
 
     .tabs button.active {
-      background: #2d6cdf;
+      background: var(--primary);
       color: #fff;
     }
 
@@ -112,13 +236,13 @@
       padding: 9px 12px;
       cursor: pointer;
       font-size: 14px;
-      background: #e8ecf3;
-      color: #222;
+      background: var(--soft-bg);
+      color: var(--text-main);
       transition: 0.2s;
     }
 
     .category-tabs button.active {
-      background: #2d6cdf;
+      background: var(--primary);
       color: #fff;
     }
 
@@ -138,13 +262,13 @@
       justify-content: space-between;
       gap: 10px;
       margin-bottom: 20px;
-      color: #444;
+      color: var(--text-muted);
       font-size: 14px;
     }
 
     .stat-box {
       flex: 1;
-      background: #f5f7fb;
+      background: var(--panel-bg);
       padding: 12px;
       border-radius: 10px;
       text-align: center;
@@ -170,13 +294,13 @@
       padding: 10px 16px;
       cursor: pointer;
       font-size: 14px;
-      background: #2d6cdf;
+      background: var(--primary);
       color: #fff;
       transition: 0.2s;
     }
 
     .filter-open-btn:hover {
-      background: #1f55b5;
+      background: var(--primary-hover);
     }
 
     .filters {
@@ -195,12 +319,12 @@
     .filter-field label {
       font-size: 12px;
       font-weight: bold;
-      color: #333;
+      color: var(--text-main);
     }
 
     .filter-field select {
       width: 100%;
-      border: 1px solid #cfd6e4;
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       padding: 9px 10px;
       font-size: 14px;
@@ -209,7 +333,7 @@
     }
 
     .filter-field select:focus {
-      border-color: #2d6cdf;
+      border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
     }
 
@@ -224,6 +348,7 @@
       border-radius: 8px;
       text-align: center;
       border: 1px solid #ddd;
+      color: #222;
     }
 
     .legend-safe {
@@ -301,7 +426,7 @@
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 8px;
-      background: #f5f7fb;
+      background: var(--panel-bg);
     }
 
     .priority-dot {
@@ -349,7 +474,7 @@
 
     .task-title {
       font-size: 16px;
-      color: #222;
+      color: var(--text-main);
       margin-bottom: 5px;
       word-break: break-word;
     }
@@ -360,18 +485,18 @@
     .task-description,
     .task-priority {
       font-size: 12px;
-      color: #555;
+      color: var(--text-muted);
       margin-top: 3px;
     }
 
     .task-status strong,
     .task-priority strong {
-      color: #222;
+      color: var(--text-main);
     }
 
     .task-description-preview {
       font-size: 12px;
-      color: #555;
+      color: var(--text-muted);
       margin-top: 3px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -381,7 +506,7 @@
 
     .open-hint {
       font-size: 11px;
-      color: #667085;
+      color: var(--text-light);
       margin-top: 5px;
     }
 
@@ -406,7 +531,7 @@
 
     .edit-btn {
       background: #ffc107;
-      color: #222;
+      color: var(--text-main);
     }
 
     .delete-btn {
@@ -482,22 +607,22 @@
     .modal {
       width: 100%;
       max-width: 460px;
-      background: #ffffff;
+      background: var(--app-bg);
       border-radius: 16px;
       padding: 22px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 20px 50px var(--modal-shadow);
       animation: modalShow 0.25s ease;
     }
 
     .modal h2 {
       font-size: 22px;
-      color: #222;
+      color: var(--text-main);
       margin-bottom: 6px;
     }
 
     .modal-subtitle {
       font-size: 13px;
-      color: #667085;
+      color: var(--text-light);
       margin-bottom: 18px;
     }
 
@@ -516,14 +641,14 @@
     .modal-field label {
       font-size: 13px;
       font-weight: bold;
-      color: #333;
+      color: var(--text-main);
     }
 
     .modal-field input,
     .modal-field select,
     .modal-field textarea {
       width: 100%;
-      border: 1px solid #cfd6e4;
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 14px;
@@ -534,7 +659,7 @@
     .modal-field input:focus,
     .modal-field select:focus,
     .modal-field textarea:focus {
-      border-color: #2d6cdf;
+      border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
     }
 
@@ -543,9 +668,9 @@
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      color: #555;
-      background: #f5f7fb;
-      border: 1px solid #dfe5f0;
+      color: var(--text-muted);
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 8px 10px;
     }
@@ -562,12 +687,12 @@
       flex-direction: column;
       gap: 10px;
       font-size: 14px;
-      color: #444;
+      color: var(--text-muted);
     }
 
     .details-item {
-      background: #f5f7fb;
-      border: 1px solid #dfe5f0;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 10px;
       word-break: break-word;
@@ -575,7 +700,7 @@
     }
 
     .details-item strong {
-      color: #222;
+      color: var(--text-main);
     }
 
     .details-description {
@@ -605,8 +730,81 @@
       }
     }
 
+    body.theme-dark .task.safe {
+      background: #123524;
+      border-color: #22c55e;
+    }
+
+    body.theme-dark .task.warning {
+      background: #3f3212;
+      border-color: #eab308;
+    }
+
+    body.theme-dark .task.overdue {
+      background: #451a1a;
+      border-color: #ef4444;
+    }
+
+    body.theme-dark .task.completed {
+      background: #374151;
+      border-color: #6b7280;
+    }
+
+    body.theme-dark .legend-safe {
+      background: #e9f8ee;
+    }
+
+    body.theme-dark .legend-warning {
+      background: #fff7d6;
+    }
+
+    body.theme-dark .legend-overdue {
+      background: #ffd6d6;
+    }
+
+    body.theme-dark .modal-field input,
+    body.theme-dark .modal-field select,
+    body.theme-dark .modal-field textarea,
+    body.theme-dark .filter-field select {
+      background: #111827;
+      color: var(--text-main);
+    }
+
+    body.theme-gradient-berries .app,
+    body.theme-gradient-sunset .app,
+    body.theme-gradient-ocean .app,
+    body.theme-gradient-forest .app {
+      backdrop-filter: blur(10px);
+    }
+
     @media (max-width: 750px) {
-      .top-panel {
+      .theme-panel {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .theme-panel select {
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 14px;
+      outline: none;
+      background: var(--app-bg);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .theme-panel select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
+    }
+
+    .top-panel {
         flex-direction: column;
         align-items: stretch;
       }
@@ -744,8 +942,20 @@
   <div class="app">
     <h1>Список справ</h1>
 
+    <div class="theme-panel">
+      <label for="themeSelect">Тема сайту:</label>
+      <select id="themeSelect">
+        <option value="light">Світла</option>
+        <option value="dark">Темна</option>
+        <option value="gradient-berries">Градієнт ягідний</option>
+        <option value="gradient-sunset">Градієнт захід</option>
+        <option value="gradient-ocean">Градієнт океан</option>
+        <option value="gradient-forest">Градієнт ліс</option>
+      </select>
+    </div>
+
     <div class="top-panel">
-      <div class="top-panel-text">Створюйте завдання, задавайте дедлайни та відстежуйте терміни виконання:</div>
+      <div class="top-panel-text">Плануйте справи, контролюйте дедлайни та зберігайте історію виконаних завдань:</div>
       <button class="open-modal-btn" id="openCreateModalBtn" type="button">Створити завдання</button>
     </div>
 
@@ -819,6 +1029,7 @@
     const applyFilterBtn = document.getElementById("applyFilterBtn");
     const resetFilterBtn = document.getElementById("resetFilterBtn");
     const categoryButtons = document.querySelectorAll(".category-tabs button");
+    const themeSelect = document.getElementById("themeSelect");
 
     const totalCount = document.getElementById("totalCount");
     const activeCount = document.getElementById("activeCount");
@@ -828,6 +1039,28 @@
     let currentTab = "active";
     let currentCategory = "all";
     let editingTaskId = null;
+
+    function applyTheme(theme) {
+      document.body.classList.remove(
+        "theme-dark",
+        "theme-gradient-berries",
+        "theme-gradient-sunset",
+        "theme-gradient-ocean",
+        "theme-gradient-forest"
+      );
+
+      if (theme !== "light") {
+        document.body.classList.add("theme-" + theme);
+      }
+
+      localStorage.setItem("siteTheme", theme);
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem("siteTheme") || "light";
+      themeSelect.value = savedTheme;
+      applyTheme(savedTheme);
+    }
 
     function saveTasks() {
       localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -1457,6 +1690,10 @@
       });
     });
 
+    themeSelect.addEventListener("change", function() {
+      applyTheme(themeSelect.value);
+    });
+
     clearHistoryBtn.onclick = function() {
       clearHistory();
     };
@@ -1477,6 +1714,7 @@
       renderTasks();
     };
 
+    loadTheme();
     updatePriorityPreview();
     checkDeadlineNotifications();
     renderTasks();
