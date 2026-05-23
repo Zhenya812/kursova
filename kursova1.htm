@@ -246,6 +246,7 @@
     }
 
     .task {
+      position: relative;
       border-radius: 12px;
       padding: 14px;
       display: flex;
@@ -259,6 +260,67 @@
     .task:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .priority-corner {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-top: 28px solid #6c757d;
+      border-left: 28px solid transparent;
+      border-top-right-radius: 9px;
+    }
+
+    .priority-normal {
+      border-top-color: #28a745;
+    }
+
+    .priority-important {
+      border-top-color: #ffc107;
+    }
+
+    .priority-high {
+      border-top-color: #dc3545;
+    }
+
+    .priority-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .priority-legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #f5f7fb;
+    }
+
+    .priority-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .priority-dot.normal {
+      background: #28a745;
+    }
+
+    .priority-dot.important {
+      background: #ffc107;
+    }
+
+    .priority-dot.high {
+      background: #dc3545;
     }
 
     .task.safe {
@@ -325,9 +387,16 @@
 
     .task-actions {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      align-items: stretch;
+      justify-content: center;
+      min-width: 115px;
+    }
+
+    .task-actions button {
+      width: 100%;
+      white-space: nowrap;
     }
 
     .complete-btn {
@@ -469,6 +538,18 @@
       box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.15);
     }
 
+    .priority-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #555;
+      background: #f5f7fb;
+      border: 1px solid #dfe5f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
     .modal-actions {
       display: flex;
       justify-content: flex-end;
@@ -530,7 +611,8 @@
         align-items: stretch;
       }
 
-      .legend {
+      .legend,
+      .priority-legend {
         grid-template-columns: 1fr;
       }
 
@@ -540,6 +622,8 @@
       }
 
       .task-actions {
+        width: 100%;
+        min-width: 0;
         justify-content: flex-start;
       }
 
@@ -579,6 +663,10 @@
             <option value="Важлива">Важлива</option>
             <option value="Дуже важлива">Дуже важлива</option>
           </select>
+          <div class="priority-preview" id="priorityPreview">
+            <span class="priority-dot normal" id="priorityPreviewDot"></span>
+            <span id="priorityPreviewText">Зелений — звичайна важливість</span>
+          </div>
         </div>
 
         <div class="modal-field">
@@ -685,6 +773,12 @@
       <div class="legend-item legend-overdue">Червоний: залишився день або прострочено</div>
     </div>
 
+    <div class="priority-legend">
+      <div class="priority-legend-item"><span class="priority-dot normal"></span>Звичайна важливість</div>
+      <div class="priority-legend-item"><span class="priority-dot important"></span>Важлива</div>
+      <div class="priority-legend-item"><span class="priority-dot high"></span>Дуже важлива</div>
+    </div>
+
 
     <div class="filter-panel">
       <button class="filter-open-btn" id="openFilterBtn" type="button">Фільтр</button>
@@ -708,6 +802,8 @@
     const taskInput = document.getElementById("taskInput");
     const deadlineInput = document.getElementById("deadlineInput");
     const priorityInput = document.getElementById("priorityInput");
+    const priorityPreviewDot = document.getElementById("priorityPreviewDot");
+    const priorityPreviewText = document.getElementById("priorityPreviewText");
     const categoryInput = document.getElementById("categoryInput");
     const descriptionInput = document.getElementById("descriptionInput");
     const submitBtn = document.getElementById("submitBtn");
@@ -885,6 +981,39 @@
       return 1;
     }
 
+    function getPriorityClass(priority) {
+      if (priority === "Дуже важлива") return "priority-high";
+      if (priority === "Важлива") return "priority-important";
+      return "priority-normal";
+    }
+
+    function getPriorityPreview(priority) {
+      if (priority === "Дуже важлива") {
+        return {
+          dotClass: "priority-dot high",
+          text: "Червоний — дуже важливе завдання"
+        };
+      }
+
+      if (priority === "Важлива") {
+        return {
+          dotClass: "priority-dot important",
+          text: "Жовтий — важливе завдання"
+        };
+      }
+
+      return {
+        dotClass: "priority-dot normal",
+        text: "Зелений — звичайна важливість"
+      };
+    }
+
+    function updatePriorityPreview() {
+      const preview = getPriorityPreview(priorityInput.value);
+      priorityPreviewDot.className = preview.dotClass;
+      priorityPreviewText.textContent = preview.text;
+    }
+
     function getDeadlineTime(deadline) {
       if (!deadline) return Number.MAX_SAFE_INTEGER;
       return new Date(deadline).getTime();
@@ -961,6 +1090,10 @@
 
         const li = document.createElement("li");
         li.className = task.completed ? "task completed" : "task " + deadlineInfo.className;
+
+        const priorityCorner = document.createElement("span");
+        priorityCorner.className = "priority-corner " + getPriorityClass(task.priority || "Звичайна");
+        priorityCorner.title = "Важливість: " + (task.priority || "Звичайна");
 
         const taskInfo = document.createElement("div");
         taskInfo.className = "task-info";
@@ -1055,6 +1188,7 @@
           openDetailsModal(task.id);
         };
 
+        li.appendChild(priorityCorner);
         li.appendChild(taskInfo);
         li.appendChild(actions);
         taskList.appendChild(li);
@@ -1117,6 +1251,7 @@
       taskInput.value = "";
       deadlineInput.value = "";
       priorityInput.value = "Звичайна";
+      updatePriorityPreview();
       categoryInput.value = "Побут";
       descriptionInput.value = "";
       modalTitle.textContent = "Нове завдання";
@@ -1208,6 +1343,7 @@
       taskInput.value = task.text;
       deadlineInput.value = task.deadline ? task.deadline.slice(0, 16) : "";
       priorityInput.value = task.priority || "Звичайна";
+      updatePriorityPreview();
       categoryInput.value = task.category || "Побут";
       descriptionInput.value = task.description || "";
       openModal("edit");
@@ -1235,6 +1371,8 @@
       resetForm();
       openModal("create");
     };
+
+    priorityInput.addEventListener("change", updatePriorityPreview);
 
     taskForm.addEventListener("submit", function(event) {
       event.preventDefault();
@@ -1339,6 +1477,7 @@
       renderTasks();
     };
 
+    updatePriorityPreview();
     checkDeadlineNotifications();
     renderTasks();
 
